@@ -10,7 +10,14 @@ app does not crash if MediaPipe is unavailable in the runtime.
 """
 
 import numpy as np
-import cv2
+# Guarded cv2 import
+try:
+    import cv2
+    _cv2_import_error = None
+except Exception as e:
+    cv2 = None
+    _cv2_import_error = e
+
 import streamlit as st
 
 KNOWN_WORDS = {
@@ -40,6 +47,12 @@ def _finger_states(hand_landmarks):
 def run():
     st.title("Task 6: Sign Language Detection")
     st.caption("Hand landmark recognition using MediaPipe. If MediaPipe is not installed in the runtime, this module will inform you and return.")
+
+    if cv2 is None:
+        st.error(
+            f"OpenCV import failed: {_cv2_import_error!s}. Ensure `opencv-python-headless` is installed."
+        )
+        return
 
     # Guard MediaPipe import so failure doesn't crash the app
     try:
