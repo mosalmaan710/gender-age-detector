@@ -1,7 +1,7 @@
 """
 Real-Time Application for Gender and Age Detection
-Main Project + 6 Internship Tasks
-Author: Muhammad Salmaan | RA2511003010979
+Main Project + Tasks
+Author: Muhammad Salmaan
 
 Run locally:
     pip install -r requirements.txt
@@ -17,7 +17,6 @@ page = st.sidebar.radio(
     "Choose a module",
     [
         "Main Project - Real-Time Gender & Age Detector",
-        "Task 1 - Senior Citizen Identification",
         "Task 2 - Age & Emotion Detection (Voice)",
         "Task 3 - Long Hair Identification",
         "Task 4 - Nationality Detection",
@@ -31,22 +30,25 @@ st.sidebar.caption("Internship submission build — SRMIST / ElevanceSkills")
 
 if page == "Main Project - Real-Time Gender & Age Detector":
     from tasks import main_project
+
     main_project.run()
-elif page == "Task 1 - Senior Citizen Identification":
-    from tasks import senior_citizen
-    senior_citizen.run()
 elif page == "Task 2 - Age & Emotion Detection (Voice)":
     from tasks import voice_age_emotion
+
     voice_age_emotion.run()
 elif page == "Task 3 - Long Hair Identification":
     from tasks import long_hair
+
     long_hair.run()
 elif page == "Task 4 - Nationality Detection":
     from tasks import nationality
+
     nationality.run()
 elif page == "Task 5 - Car Colour Detection":
     from tasks import car_colour
+
     car_colour.run()
 elif page == "Task 6 - Sign Language Detection":
     from tasks import sign_language
+
     sign_language.run()
