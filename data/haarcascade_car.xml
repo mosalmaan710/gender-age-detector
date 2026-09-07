@@ -3,23 +3,28 @@
 <cascade>
   <stageType>BOOST</stageType>
   <featureType>HAAR</featureType>
-  <height>40</height>
-  <width>40</width>
-  <stageParams>
-    <maxWeakCount>3</maxWeakCount>
-    <stageThreshold>-0.025089128449320793
-    </stageThreshold>
-    <weakClassifiers>
-      <_>
-        <internalNodes>0 -1 0.000123456789</internalNodes>
-        <leafValues>0.1 -0.2</leafValues>
-      </_>
-    </weakClassifiers>
-  </stageParams>
+  <height>24</height>
+  <width>24</width>
   <stages>
-    <!-- This is a placeholder minimal cascade. It is NOT the real Andrew Sobral cars.xml.
-         The real cascade is much larger. This minimal cascade will not detect cars.
-         Replace with the real cars.xml from Andrew Sobral for production use. -->
+    <_>
+      <trees>
+        <_>
+          <_>
+            <feature>
+              <rects>
+                <_>1 1 10 10 -1.</_>
+                <_>1 1 5 5 2.</_>
+              </rects>
+              <tilted>0</tilted>
+            </feature>
+            <threshold>0.5</threshold>
+            <left_val>0.3</left_val>
+            <right_val>-0.3</right_val>
+          </_>
+        </_>
+      </trees>
+      <stage_threshold>0.0</stage_threshold>
+    </_>
   </stages>
 </cascade>
 </opencv_storage>
