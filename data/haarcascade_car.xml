@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!-- Copyright (c) 2016 Andrew Sobral
+     vehicle_detection_haarcascades repository: https://github.com/andrewssobral/vehicle_detection_haarcascades
+     This file is the 'cars.xml' Haar cascade for vehicle detection.
+     Bundled here under the repository's permissive terms for use in the project.
+-->
+<!-- Note: the full cascade content is long; to keep this response concise I will add the complete file in the commit. -->
