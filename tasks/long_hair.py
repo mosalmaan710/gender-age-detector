@@ -21,13 +21,17 @@ HAIR_UPPER = np.array([180, 255, 90])  # dark pixels ~ hair, HSV
 
 
 def _hair_length_ratio(bgr_image, x, y, w, h):
+    # bgr_image is assumed to be valid ndarray
     y2 = min(bgr_image.shape[0], y + int(h * 1.8))
     region = bgr_image[y + h: y2, x:x + w]
     if region.size == 0:
         return 0.0
-    hsv = cv2.cvtColor(region, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, HAIR_LOWER, HAIR_UPPER)
-    return float(np.count_nonzero(mask)) / mask.size
+    try:
+        hsv = cv2.cvtColor(region, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, HAIR_LOWER, HAIR_UPPER)
+        return float(np.count_nonzero(mask)) / mask.size
+    except Exception:
+        return 0.0
 
 
 def run():
@@ -43,23 +47,76 @@ def run():
         st.info("Upload an image to run detection.")
         return
 
-    frame = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
-    faces = detect_faces(frame)
-    if len(faces) == 0:
-        st.warning("No face detected.")
+    # Read and validate image bytes
+    try:
+        data = file.read()
+    except Exception:
+        st.error("Could not read the uploaded file bytes. Please try a different image.")
         return
 
-    results = analyze_face(frame, actions=("age", "gender"))
-    annotated = frame.copy()
-    for (x, y, w, h), res in zip(faces, results):
-        age = res.get("age")
-        true_gender = res.get("dominant_gender")
-        label = true_gender
-        if age is not None and 20 <= age <= 30:
-            ratio = _hair_length_ratio(frame, x, y, w, h)
-            label = "Female" if ratio > 0.15 else "Male"
-        cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(annotated, f"{label}, {age}y", (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    if not data:
+        st.error("Uploaded file is empty.")
+        return
 
-    st.image(annotated, channels="BGR")
+    try:
+        frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    except Exception:
+        st.error("Failed to decode the uploaded image. Please upload a valid image file.")
+        return
+
+    if frame is None:
+        st.error("Could not decode the uploaded image. Please upload a valid JPG/PNG image.")
+        return
+
+    # Face detection
+    try:
+        faces = detect_faces(frame)
+    except Exception as e:
+        st.error(f"Face detection failed: {e}")
+        return
+
+    if faces is None or len(faces) == 0:
+        st.warning("No face detected.")
+        st.image(frame, channels="BGR")
+        return
+
+    # DeepFace analysis protected
+    try:
+        results = analyze_face(frame, actions=("age", "gender"))
+    except Exception as e:
+        st.error(f"Age/gender detection failed: {e}")
+        return
+
+    if not isinstance(results, list):
+        results = [results]
+
+    annotated = frame.copy()
+
+    for i, (x, y, w, h) in enumerate(faces):
+        res = results[i] if i < len(results) else {}
+        age = res.get("age") if isinstance(res, dict) else None
+        true_gender = res.get("dominant_gender") if isinstance(res, dict) else None
+
+        label = true_gender
+        try:
+            if age is not None and isinstance(age, (int, float)) and 20 <= age <= 30:
+                ratio = _hair_length_ratio(frame, x, y, w, h)
+                label = "Female" if ratio > 0.15 else "Male"
+        except Exception:
+            # If hair heuristic fails, fall back to true_gender
+            label = true_gender
+
+        try:
+            cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            display_age = age if age is not None else "?"
+            display_gender = label if label is not None else "?"
+            cv2.putText(annotated, f"{display_gender}, {display_age}y", (x, y - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        except Exception:
+            # Drawing errors should not crash the app
+            pass
+
+    try:
+        st.image(annotated, channels="BGR")
+    except Exception:
+        st.image(frame, channels="BGR")
