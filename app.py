@@ -17,6 +17,7 @@ page = st.sidebar.radio(
     "Choose a module",
     [
         "Main Project - Real-Time Gender & Age Detector",
+        "Task 1 - Senior Citizen Identification",
         "Task 2 - Age & Emotion Detection (Voice)",
         "Task 3 - Long Hair Identification",
         "Task 4 - Nationality Detection",
@@ -32,6 +33,10 @@ if page == "Main Project - Real-Time Gender & Age Detector":
     from tasks import main_project
 
     main_project.run()
+elif page == "Task 1 - Senior Citizen Identification":
+    from tasks import senior_citizen
+
+    senior_citizen.run()
 elif page == "Task 2 - Age & Emotion Detection (Voice)":
     from tasks import voice_age_emotion
 
