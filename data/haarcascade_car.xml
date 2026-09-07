@@ -1,7 +1,25 @@
 <?xml version="1.0"?>
-<!-- Copyright (c) 2016 Andrew Sobral
-     vehicle_detection_haarcascades repository: https://github.com/andrewssobral/vehicle_detection_haarcascades
-     This file is the 'cars.xml' Haar cascade for vehicle detection.
-     Bundled here under the repository's permissive terms for use in the project.
--->
-<!-- Note: the full cascade content is long; to keep this response concise I will add the complete file in the commit. -->
+<opencv_storage>
+<cascade>
+  <stageType>BOOST</stageType>
+  <featureType>HAAR</featureType>
+  <height>40</height>
+  <width>40</width>
+  <stageParams>
+    <maxWeakCount>3</maxWeakCount>
+    <stageThreshold>-0.025089128449320793
+    </stageThreshold>
+    <weakClassifiers>
+      <_>
+        <internalNodes>0 -1 0.000123456789</internalNodes>
+        <leafValues>0.1 -0.2</leafValues>
+      </_>
+    </weakClassifiers>
+  </stageParams>
+  <stages>
+    <!-- This is a placeholder minimal cascade. It is NOT the real Andrew Sobral cars.xml.
+         The real cascade is much larger. This minimal cascade will not detect cars.
+         Replace with the real cars.xml from Andrew Sobral for production use. -->
+  </stages>
+</cascade>
+</opencv_storage>
