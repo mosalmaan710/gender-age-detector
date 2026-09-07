@@ -7,7 +7,7 @@
 
 DeepFace's "race" output is used as a proxy for nationality
 (it does not truly infer citizenship, only visual ethnicity cues —
-noted as a limitation in the report).
+noted as a limitation in the UI).
 """
 
 import numpy as np
@@ -32,48 +32,91 @@ def _dominant_dress_colour(bgr_image, x, y, w, h):
     region = bgr_image[y1:y2, x:x + w]
     if region.size == 0:
         return "Unknown"
-    avg = region.reshape(-1, 3).mean(axis=0)  # B, G, R
-    b, g, r = avg
-    if r > g and r > b:
-        return "Red-ish"
-    if g > r and g > b:
-        return "Green-ish"
-    if b > r and b > g:
-        return "Blue-ish"
+    try:
+        avg = region.reshape(-1, 3).mean(axis=0)  # B, G, R
+        b, g, r = avg
+        if r > g and r > b:
+            return "Red-ish"
+        if g > r and g > b:
+            return "Green-ish"
+        if b > r and b > g:
+            return "Blue-ish"
+    except Exception:
+        return "Unknown"
     return "Neutral"
 
 
 def run():
-    st.title("Task 4: Nationality Detection Model")
+    st.title("Task 4: Nationality Detection (AI estimate)")
+    st.caption("This module uses DeepFace's visual "
+               "race/ethnicity prediction as a proxy for nationality. "
+               "These are AI estimates and NOT definitive determinations of citizenship.")
 
     file = st.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
     if not file:
         st.info("Upload an image to run detection.")
         return
 
-    frame = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
-    st.image(frame, channels="BGR", caption="Input preview")
-
-    faces = detect_faces(frame)
-    if len(faces) == 0:
-        st.warning("No face detected.")
+    # Read and validate image bytes
+    try:
+        data = file.read()
+    except Exception:
+        st.error("Could not read the uploaded file bytes. Please try a different image.")
         return
 
-    results = analyze_face(frame, actions=("age", "emotion", "race"))
+    if not data:
+        st.error("Uploaded file is empty.")
+        return
+
+    try:
+        frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    except Exception:
+        st.error("Failed to decode the uploaded image. Please upload a valid image file.")
+        return
+
+    if frame is None:
+        st.error("Could not decode the uploaded image. Please upload a valid JPG/PNG image.")
+        return
+
+    st.image(frame, channels="BGR", caption="Input preview")
+
+    # Detect faces
+    try:
+        faces = detect_faces(frame)
+    except Exception as e:
+        st.error(f"Face detection failed: {e}")
+        return
+
+    if faces is None or len(faces) == 0:
+        st.warning("No face detected.")
+        st.image(frame, channels="BGR")
+        return
+
+    # Analyze faces (protected)
+    try:
+        results = analyze_face(frame, actions=("age", "emotion", "race"))
+    except Exception as e:
+        st.error(f"Nationality analysis failed: {e}")
+        return
+
+    if not isinstance(results, list):
+        results = [results]
+
     st.subheader("Output")
-    for (x, y, w, h), res in zip(faces, results):
-        race = res.get("dominant_race", "").lower()
+    for i, ((x, y, w, h)) in enumerate(faces):
+        res = results[i] if i < len(results) else {}
+        race = (res.get("dominant_race") or "").lower() if isinstance(res, dict) else ""
         nationality = RACE_TO_NATIONALITY.get(race, "Other")
-        emotion = res.get("dominant_emotion")
-        age = res.get("age")
+        emotion = res.get("dominant_emotion") if isinstance(res, dict) else None
+        age = res.get("age") if isinstance(res, dict) else None
         dress = _dominant_dress_colour(frame, x, y, w, h)
 
         st.markdown(f"**Person at ({x},{y})**")
         if nationality == "Indian":
-            st.write(f"Nationality: Indian | Age: {age} | Dress colour: {dress} | Emotion: {emotion}")
+            st.write(f"Nationality estimate: Indian | Age: {age} | Dress colour: {dress} | Emotion: {emotion}")
         elif nationality == "United States":
             st.write(f"Age: {age} | Emotion: {emotion}")
         elif nationality == "African":
             st.write(f"Emotion: {emotion} | Dress colour: {dress}")
         else:
-            st.write(f"Nationality: {nationality} | Emotion: {emotion}")
+            st.write(f"Nationality estimate: {nationality} | Emotion: {emotion}")
