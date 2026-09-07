@@ -1,13 +1,12 @@
-"""Task 1: Senior Citizen Identification.
-
-Detects every person in an uploaded image / real-time webcam feed,
-predicts age + gender, flags anyone over 60 as a Senior Citizen,
-and logs age, gender, and time of visit to a CSV file.
-"""
-
 import numpy as np
-import cv2
-import pandas as pd
+# Guarded cv2 import
+try:
+    import cv2
+    _cv2_import_error = None
+except Exception as e:
+    cv2 = None
+    _cv2_import_error = e
+
 import streamlit as st
 
 from utils.helpers import detect_faces, analyze_face, log_to_csv, timestamp
@@ -22,6 +21,10 @@ def run():
         "Detects multiple people in a mall/store camera feed, predicts age & gender, "
         "and flags anyone over **60** as a senior citizen. Every detection is logged."
     )
+
+    if cv2 is None:
+        st.error(f"OpenCV import failed: {_cv2_import_error!s}. Ensure `opencv-python-headless` is installed.")
+        return
 
     mode = st.radio("Input source", ["Upload image", "Webcam snapshot"], horizontal=True)
     frame = None
@@ -127,6 +130,7 @@ def run():
     # Visit log display
     st.subheader("Visit log")
     try:
+        import pandas as pd
         df = pd.read_csv(LOG_PATH)
         st.dataframe(df.tail(50))
         st.download_button("Download full log (CSV)", df.to_csv(index=False), "senior_citizen_log.csv")
