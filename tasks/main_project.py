@@ -1,7 +1,14 @@
 """Main Project: Real-Time Application for Gender and Age Detection."""
 
 import numpy as np
-import cv2
+# Guarded cv2 import
+try:
+    import cv2
+    _cv2_import_error = None
+except Exception as e:
+    cv2 = None
+    _cv2_import_error = e
+
 import streamlit as st
 
 from utils.helpers import detect_faces, analyze_face
@@ -13,6 +20,10 @@ def run():
         "Upload an image, or use your webcam snapshot, to detect every face's "
         "**age** and **gender** in real time."
     )
+
+    if cv2 is None:
+        st.error(f"OpenCV import failed: {_cv2_import_error!s}. Ensure `opencv-python-headless` is installed.")
+        return
 
     mode = st.radio("Input source", ["Upload image", "Webcam snapshot"], horizontal=True)
 
