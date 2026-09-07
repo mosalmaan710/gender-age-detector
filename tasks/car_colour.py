@@ -11,23 +11,36 @@ will show a clear error instead of attempting a network download.
 
 import os
 import numpy as np
-import cv2
 import streamlit as st
 
-CAR_CASCADE_PATH = "data/haarcascade_car.xml"
+# Guarded cv2 import
+try:
+    import cv2
+    _cv2_import_error = None
+except Exception as e:
+    cv2 = None
+    _cv2_import_error = e
+
+# Resolve cascade path relative to this file so it works regardless of CWD.
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CAR_CASCADE_PATH = os.path.join(BASE_DIR, "data", "haarcascade_car.xml")
 
 
 def _ensure_car_cascade():
     # Do NOT download at runtime. Require the cascade to be bundled in the repo.
     if not os.path.isfile(CAR_CASCADE_PATH):
-        return None
+        return None, f"Cascade file not found at {CAR_CASCADE_PATH}"
 
-    cascade = cv2.CascadeClassifier(CAR_CASCADE_PATH)
+    try:
+        cascade = cv2.CascadeClassifier(CAR_CASCADE_PATH)
+    except Exception as e:
+        return None, f"Failed to construct CascadeClassifier: {e}"
+
     # CascadeClassifier.empty() returns True if loading failed
     if cascade.empty():
-        return None
+        return None, "Cascade loaded but is empty (file may be invalid or incompatible)."
 
-    return cascade
+    return cascade, None
 
 
 def _is_blue(bgr_image, x, y, w, h):
@@ -45,6 +58,10 @@ def _is_blue(bgr_image, x, y, w, h):
 def run():
     st.title("Task 5: Car Colour Detection Model")
     st.caption("Blue cars -> red box | other colours -> blue box | counts people at the signal.")
+
+    if cv2 is None:
+        st.error(f"OpenCV import failed: {_cv2_import_error!s}. Ensure opencv-python-headless is installed in requirements.txt.")
+        return
 
     file = st.file_uploader("Upload traffic-signal image", type=["jpg", "jpeg", "png"])
     if not file:
@@ -74,12 +91,12 @@ def run():
 
     st.image(frame, channels="BGR", caption="Input preview")
 
-    car_cascade = _ensure_car_cascade()
+    car_cascade, cascade_err = _ensure_car_cascade()
     if car_cascade is None:
         st.error(
             "Car cascade file is missing or failed to load.\n"
-            "Please add the OpenCV Haar cascade to data/haarcascade_car.xml in the repository.\n"
-            "This file should be the standard OpenCV cascade for car detection (not created here)."
+            f"Details: {cascade_err}\n\n"
+            "Please add the OpenCV Haar cascade to data/haarcascade_car.xml in the repository."
         )
         return
 
