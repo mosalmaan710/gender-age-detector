@@ -21,17 +21,22 @@ HAIR_UPPER = np.array([180, 255, 90])  # dark pixels ~ hair, HSV
 
 
 def _hair_length_ratio(bgr_image, x, y, w, h):
-    # bgr_image is assumed to be valid ndarray
-    y2 = min(bgr_image.shape[0], y + int(h * 1.8))
-    region = bgr_image[y + h: y2, x:x + w]
+    height, width = bgr_image.shape[:2]
+
+    x1 = max(0, x)
+    x2 = min(width, x + w)
+    y1 = min(height, y + h)
+    y2 = min(height, y + int(h * 1.8))
+
+    if x1 >= x2 or y1 >= y2:
+        return 0.0
+
+    region = bgr_image[y1:y2, x1:x2]
+
     if region.size == 0:
         return 0.0
-    try:
-        hsv = cv2.cvtColor(region, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, HAIR_LOWER, HAIR_UPPER)
-        return float(np.count_nonzero(mask)) / mask.size
-    except Exception:
-        return 0.0
+
+    # Keep the existing HSV/hair analysis code below this point.
 
 
 def run():
