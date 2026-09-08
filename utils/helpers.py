@@ -61,21 +61,34 @@ def detect_faces(bgr_image):
     except Exception:
         return []
 
-
 def analyze_face(bgr_image, actions=("age", "gender", "emotion", "race")):
     """
-    Wraps DeepFace.analyze. DeepFace lazily downloads pretrained weights on first call.
-    This function keeps DeepFace usage local so import issues are isolated.
+    Analyze the supplied image with DeepFace.
+
+    Returns a list of DeepFace results.
     """
     from deepface import DeepFace
 
-    results = DeepFace.analyze(
-        img_path=bgr_image,
-        actions=list(actions),
-        enforce_detection=False,
-        silent=True,
-    )
-    return results if isinstance(results, list) else [results]
+    try:
+        results = DeepFace.analyze(
+            img_path=bgr_image,
+            actions=list(actions),
+            detector_backend="opencv",
+            enforce_detection=False,
+            silent=True,
+        )
+    except TypeError:
+        results = DeepFace.analyze(
+            img_path=bgr_image,
+            actions=list(actions),
+            enforce_detection=False,
+        )
+
+    if isinstance(results, list):
+        return results
+
+    return [results]
+
 
 
 def log_to_csv(path, row, header):
