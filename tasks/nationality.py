@@ -16,15 +16,14 @@ import streamlit as st
 
 from utils.helpers import detect_faces, analyze_face
 
-RACE_TO_NATIONALITY = {
+RACE_TO_GROUP = {
     "indian": "Indian",
-    "white": "United States",
-    "latino hispanic": "Other",
-    "middle eastern": "Other",
-    "asian": "Other",
-    "black": "African",
+    "white": "White",
+    "latino hispanic": "Latino/Hispanic",
+    "middle eastern": "Middle Eastern",
+    "asian": "Asian",
+    "black": "Black/African",
 }
-
 
 def _dominant_dress_colour(bgr_image, x, y, w, h):
     y1 = min(bgr_image.shape[0], y + h)
@@ -106,7 +105,7 @@ def run():
     for i, ((x, y, w, h)) in enumerate(faces):
         res = results[i] if i < len(results) else {}
         race = (res.get("dominant_race") or "").lower() if isinstance(res, dict) else ""
-        nationality = RACE_TO_NATIONALITY.get(race, "Other")
+        race_group = RACE_TO_GROUP.get(race, "Other")
         emotion = res.get("dominant_emotion") if isinstance(res, dict) else None
         age = res.get("age") if isinstance(res, dict) else None
         dress = _dominant_dress_colour(frame, x, y, w, h)
